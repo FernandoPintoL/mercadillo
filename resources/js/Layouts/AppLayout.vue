@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import {onMounted, ref} from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import ApplicationMark from '@/Components/ApplicationMark.vue';
 import Banner from '@/Components/Banner.vue';
@@ -7,10 +7,36 @@ import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
+import { initFlowbite, Modal } from 'flowbite';
+import NavBar from "@/Componentes/NavBar.vue";
+import { useDarkMode } from '@/composables/useDarkMode';
+import SideBar from "@/Componentes/SideBar.vue";
+
+const { isDark, toggleDarkMode } = useDarkMode();
 
 defineProps({
     title: String,
 });
+
+onMounted(() => {
+    initFlowbite();
+    const $buttonElement = document.querySelector('#button');
+    const $modalElement = document.querySelector('#modal');
+    const $closeButton = document.querySelector('#closeButton');
+
+    const modalOptions = {
+        backdropClasses: 'bg-gray-900 bg-opacity-50 dark:bg-opacity-80 fixed inset-0 z-40'
+    }
+
+    if ($modalElement) {
+        const modal = new Modal($modalElement, modalOptions);
+        $buttonElement.addEventListener('click', () => modal.toggle());
+        $closeButton.addEventListener('click', () => modal.hide());
+
+        // programatically show
+        // modal.show();
+    }
+})
 
 const showingNavigationDropdown = ref(false);
 
@@ -30,23 +56,33 @@ const logout = () => {
 <template>
     <div>
         <Head :title="title" />
+        <NavBar />
+        <div class="flex pt-16 overflow-hidden bg-gray-50 dark:bg-gray-900">
+            <SideBar/>
 
-        <Banner />
+            <div id="main-content" class="relative w-full h-full overflow-y-auto bg-gray-50 lg:ml-64 dark:bg-gray-900">
+                <main>
+                    <slot />
+                </main>
+            </div>
 
-        <div class="min-h-screen bg-gray-100">
+        </div>
+
+<!--        <Banner />-->
+<!--        <div class="min-h-screen bg-gray-100">
             <nav class="bg-white border-b border-gray-100">
-                <!-- Primary Navigation Menu -->
+                &lt;!&ndash; Primary Navigation Menu &ndash;&gt;
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="flex justify-between h-16">
                         <div class="flex">
-                            <!-- Logo -->
+                            &lt;!&ndash; Logo &ndash;&gt;
                             <div class="shrink-0 flex items-center">
                                 <Link :href="route('dashboard')">
                                     <ApplicationMark class="block h-9 w-auto" />
                                 </Link>
                             </div>
 
-                            <!-- Navigation Links -->
+                            &lt;!&ndash; Navigation Links &ndash;&gt;
                             <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                                 <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
                                     Dashboard
@@ -56,7 +92,7 @@ const logout = () => {
 
                         <div class="hidden sm:flex sm:items-center sm:ms-6">
                             <div class="ms-3 relative">
-                                <!-- Teams Dropdown -->
+                                &lt;!&ndash; Teams Dropdown &ndash;&gt;
                                 <Dropdown v-if="$page.props.jetstream.hasTeamFeatures" align="right" width="60">
                                     <template #trigger>
                                         <span class="inline-flex rounded-md">
@@ -72,12 +108,12 @@ const logout = () => {
 
                                     <template #content>
                                         <div class="w-60">
-                                            <!-- Team Management -->
+                                            &lt;!&ndash; Team Management &ndash;&gt;
                                             <div class="block px-4 py-2 text-xs text-gray-400">
                                                 Manage Team
                                             </div>
 
-                                            <!-- Team Settings -->
+                                            &lt;!&ndash; Team Settings &ndash;&gt;
                                             <DropdownLink :href="route('teams.show', $page.props.auth.user.current_team)">
                                                 Team Settings
                                             </DropdownLink>
@@ -86,7 +122,7 @@ const logout = () => {
                                                 Create New Team
                                             </DropdownLink>
 
-                                            <!-- Team Switcher -->
+                                            &lt;!&ndash; Team Switcher &ndash;&gt;
                                             <template v-if="$page.props.auth.user.all_teams.length > 1">
                                                 <div class="border-t border-gray-200" />
 
@@ -113,7 +149,7 @@ const logout = () => {
                                 </Dropdown>
                             </div>
 
-                            <!-- Settings Dropdown -->
+                            &lt;!&ndash; Settings Dropdown &ndash;&gt;
                             <div class="ms-3 relative">
                                 <Dropdown align="right" width="48">
                                     <template #trigger>
@@ -133,7 +169,7 @@ const logout = () => {
                                     </template>
 
                                     <template #content>
-                                        <!-- Account Management -->
+                                        &lt;!&ndash; Account Management &ndash;&gt;
                                         <div class="block px-4 py-2 text-xs text-gray-400">
                                             Manage Account
                                         </div>
@@ -148,7 +184,7 @@ const logout = () => {
 
                                         <div class="border-t border-gray-200" />
 
-                                        <!-- Authentication -->
+                                        &lt;!&ndash; Authentication &ndash;&gt;
                                         <form @submit.prevent="logout">
                                             <DropdownLink as="button">
                                                 Log Out
@@ -159,7 +195,7 @@ const logout = () => {
                             </div>
                         </div>
 
-                        <!-- Hamburger -->
+                        &lt;!&ndash; Hamburger &ndash;&gt;
                         <div class="-me-2 flex items-center sm:hidden">
                             <button class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out" @click="showingNavigationDropdown = ! showingNavigationDropdown">
                                 <svg
@@ -188,7 +224,7 @@ const logout = () => {
                     </div>
                 </div>
 
-                <!-- Responsive Navigation Menu -->
+                &lt;!&ndash; Responsive Navigation Menu &ndash;&gt;
                 <div :class="{'block': showingNavigationDropdown, 'hidden': ! showingNavigationDropdown}" class="sm:hidden">
                     <div class="pt-2 pb-3 space-y-1">
                         <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">
@@ -196,7 +232,7 @@ const logout = () => {
                         </ResponsiveNavLink>
                     </div>
 
-                    <!-- Responsive Settings Options -->
+                    &lt;!&ndash; Responsive Settings Options &ndash;&gt;
                     <div class="pt-4 pb-1 border-t border-gray-200">
                         <div class="flex items-center px-4">
                             <div v-if="$page.props.jetstream.managesProfilePhotos" class="shrink-0 me-3">
@@ -222,14 +258,14 @@ const logout = () => {
                                 API Tokens
                             </ResponsiveNavLink>
 
-                            <!-- Authentication -->
+                            &lt;!&ndash; Authentication &ndash;&gt;
                             <form method="POST" @submit.prevent="logout">
                                 <ResponsiveNavLink as="button">
                                     Log Out
                                 </ResponsiveNavLink>
                             </form>
 
-                            <!-- Team Management -->
+                            &lt;!&ndash; Team Management &ndash;&gt;
                             <template v-if="$page.props.jetstream.hasTeamFeatures">
                                 <div class="border-t border-gray-200" />
 
@@ -237,7 +273,7 @@ const logout = () => {
                                     Manage Team
                                 </div>
 
-                                <!-- Team Settings -->
+                                &lt;!&ndash; Team Settings &ndash;&gt;
                                 <ResponsiveNavLink :href="route('teams.show', $page.props.auth.user.current_team)" :active="route().current('teams.show')">
                                     Team Settings
                                 </ResponsiveNavLink>
@@ -246,7 +282,7 @@ const logout = () => {
                                     Create New Team
                                 </ResponsiveNavLink>
 
-                                <!-- Team Switcher -->
+                                &lt;!&ndash; Team Switcher &ndash;&gt;
                                 <template v-if="$page.props.auth.user.all_teams.length > 1">
                                     <div class="border-t border-gray-200" />
 
@@ -272,18 +308,16 @@ const logout = () => {
                     </div>
                 </div>
             </nav>
-
-            <!-- Page Heading -->
+            &lt;!&ndash; Page Heading &ndash;&gt;
             <header v-if="$slots.header" class="bg-white shadow">
                 <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                     <slot name="header" />
                 </div>
             </header>
-
-            <!-- Page Content -->
+            &lt;!&ndash; Page Content &ndash;&gt;
             <main>
                 <slot />
             </main>
-        </div>
+        </div>-->
     </div>
 </template>
