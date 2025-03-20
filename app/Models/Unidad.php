@@ -9,4 +9,12 @@ class Unidad extends Model
 {
     /** @use HasFactory<\Database\Factories\UnidadFactory> */
     use HasFactory;
+    protected $table = "unidads";
+    protected $primaryKey = "id";
+    protected $fillable = [
+        'sigla',
+        'detalle',
+        'created_at',
+        'updated_at'
+    ];
 }

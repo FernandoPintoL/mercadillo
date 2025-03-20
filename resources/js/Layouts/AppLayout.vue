@@ -1,12 +1,6 @@
 <script setup>
 import {onMounted, ref} from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import ApplicationMark from '@/Components/ApplicationMark.vue';
-import Banner from '@/Components/Banner.vue';
-import Dropdown from '@/Components/Dropdown.vue';
-import DropdownLink from '@/Components/DropdownLink.vue';
-import NavLink from '@/Components/NavLink.vue';
-import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import { initFlowbite, Modal } from 'flowbite';
 import NavBar from "@/Componentes/NavBar.vue";
 import { useDarkMode } from '@/composables/useDarkMode';
@@ -60,7 +54,7 @@ const logout = () => {
         <div class="flex pt-16 overflow-hidden bg-gray-50 dark:bg-gray-900">
             <SideBar/>
 
-            <div id="main-content" class="relative w-full h-full overflow-y-auto bg-gray-50 lg:ml-64 dark:bg-gray-900">
+            <div id="main-content" class="relative w-full bg-gray-50 lg:ml-64 dark:bg-gray-900">
                 <main>
                     <slot />
                 </main>

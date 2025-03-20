@@ -1,19 +1,21 @@
 <script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
-import {inject, onMounted, reactive, ref} from 'vue'
+import {onMounted, reactive, ref} from 'vue';
 import HeaderIndex from "@/Componentes/HeaderIndex.vue";
 import Alert from "@/Componentes/Alert.vue";
 import {route} from "ziggy-js";
-import moment from "moment";
-import {useForm} from "@inertiajs/vue3";
-import InputError from "@/Components/InputError.vue";
+import {Link} from "@inertiajs/vue3";
+import CategoriaService from "@/Services/CategoriaService.js";
+import UtilsServices from "@/Services/UtilsServices.js";
+import AlertService from "@/Services/AlertService.js";
+import AlertInfo from "@/Componentes/Alert-Info.vue";
+import SearchInput from "@/Componentes/SearchInput.vue";
+import Loader from "@/Componentes/Loader.vue";
 
-const Swal = inject('$swal')
-
-const model = "categoria";
+const model_service = CategoriaService;
+const model_path = model_service.path_url;
 
 const props = defineProps({
-    model: Object,
     listado: {
         type: Array,
         default: [],
@@ -37,22 +39,6 @@ onMounted(() => {
     datas.list = props.listado
 })
 
-const form = useForm({
-    id: props.model != null ? props.model.id : '',
-    sigla: props.model != null ? props.model.sigla : '',
-    detalle: props.model != null ? props.model.detalle : '',
-})
-
-const submit_create = () => {
-    form.post(route(model + '.store')).catch((error) => {
-        console.log(error)
-        Swal.fire({
-            title: 'Algun otro error esta sucediendo!',
-            text: error,
-            icon: 'error',
-        })
-    })
-}
 
 const datas = reactive({
     list: [],
@@ -61,173 +47,73 @@ const datas = reactive({
     dateEnd: '',
     messageList: '',
     metodoList: '',
-    siglaError:'',
-    detalleError:''
+    siglaError: '',
+    detalleError: ''
 })
 
 const query = ref('')
 
-const onSearchQuery = (e) => {
-    queryList(e.target.value)
-}
-
-const queryListSaltoTake = async (consulta, skip, take) => {
-    datas.isLoad = true
-    const url = route(model + '.query', {
-        query: consulta.toUpperCase(),
-        skip: skip,
-        take: take,
-    })
-    await axios
-        .post(url)
-        .then((response) => {
-            console.log(response.data)
-            if (response.data.isSuccess) {
-                datas.list = response.data.data
-                datas.messageList = response.data.message
-                datas.metodoList = consulta.length > 0 ? ' con: ' + consulta : ''
-                console.log(datas.list.length)
-            } else {
-                datas.list = []
-            }
-        })
-        .catch((error) => {
-            console.log('respuesta error')
-            console.log(error)
-            Swal.fire({
-                title: 'Algun otro error esta sucediendo!',
-                text: error,
-                icon: 'error',
-            })
-        })
-    datas.isLoad = false
-}
-
 const queryList = async (consulta) => {
+    query.value = consulta;
     datas.isLoad = true
-    const url = route(model + '.query', {query: consulta.toUpperCase()})
-    await axios
-        .post(url)
-        .then((response) => {
-            if (response.data.isSuccess) {
-                datas.list = response.data.data
-                datas.messageList = response.data.message
-                datas.metodoList = consulta.length > 0 ? ' con: ' + consulta : ''
-            } else {
-                datas.list = []
-            }
-        })
-        .catch((error) => {
-            console.log('respuesta error')
-            console.log(error)
-        })
+    const response = await model_service.query(consulta);
+    if (response.data.isSuccess) {
+        datas.list = response.data.data
+        datas.messageList = response.data.message
+        datas.metodoList = consulta.length > 0 ? ' con: ' + consulta : ''
+    } else {
+        datas.list = []
+    }
     datas.isLoad = false
-}
-
-const fecha = (fechaData) => {
-    return moment.tz(fechaData, 'America/La_Paz').format('YYYY-MM-DD HH:MM a')
 }
 
 const destroyMessage = (id) => {
-    Swal.fire({
-        title: 'Estas seguro de eliminar esta información?',
-        text: '',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Si, estoy seguro!',
-    }).then((result) => {
-        if (result.isConfirmed) {
-            datas.isLoad = true
-            destroyData(id)
-            datas.isLoad = false
+    AlertService.confirm('Esta información ya no podrá ser recuperada').then(
+        (result) => {
+            if (result.isConfirmed) {
+                datas.isLoad = true
+                destroyData(id)
+                datas.isLoad = false
+            }
         }
-    })
+    )
 }
 
 const destroyData = async (id) => {
-    const url = route(model + '.destroy', id)
-    await axios
-        .delete(url)
-        .then((response) => {
-            console.log(response)
-            Swal.fire({
-                title: response.data.isSuccess ? 'Buen Trabajo!' : 'Error!',
-                text:
-                    response.data.statusCode === 23503
-                        ? 'ESTE DATO ESTA SIENDO USADO EN OTRAS TABLAS'
-                        : response.data.message,
-                icon: response.data.isSuccess ? 'success' : 'error',
-            })
-            if (response.data.isSuccess) {
-                queryList('')
-            }
-        })
-        .catch((error) => {
-            if (error.response.data.isMessageError) {
-                console.log(error.message)
-                Swal.fire({
-                    title: error.response.data.isMessageError
-                        ? 'Error desde el micro servicio!'
-                        : 'Algun otro error esta sucediendo!',
-                    text: error.response.data.isMessageError
-                        ? 'Algunos datos fueron mal registrados'
-                        : 'Algun otro tipo de error sucedio',
-                    icon: 'error',
-                })
-            }
-        })
+    const response = await model_service.destroy(id);
+    if (response.data.isSuccess) {
+        await AlertService.success('La operación se completo exitosamente!.')
+        await queryList('');
+    } else {
+        await AlertService.error(response.data.message)
+    }
 }
 
 </script>
 
 <template>
-    <AppLayout title="Categorias">
+    <AppLayout :title="model_path.toUpperCase()">
         <div
             class="p-4 bg-white block sm:flex items-center justify-between border-b border-gray-200 lg:mt-1.5 dark:bg-gray-800 dark:border-gray-700">
             <div class="w-full mb-1">
-                <HeaderIndex :title="model"/>
+                <HeaderIndex :title="model_path"/>
                 <div
-                    class="items-center justify-between block sm:flex md:divide-x md:divide-gray-100 dark:divide-gray-700">
-                    <div class="flex items-center mb-4 sm:mb-0">
-                        <form v-show="datas.list.length > 0" class="sm:pr-3" action="#" method="GET">
-                            <label for="products-search" class="sr-only">Buscar</label>
-                            <div class="relative w-48 mt-1 sm:w-64 xl:w-96">
-                                <input type="text" name="email" id="products-search"
-                                       class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                                       :placeholder="'Buscar por '+model">
-                            </div>
-                        </form>
-                        <!--                        <div class="flex items-center w-full sm:justify-end">
-                                                    <div class="flex pl-2 space-x-1">
-                                                        <a href="#" class="inline-flex justify-center p-1 text-gray-500 rounded cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
-                                                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"></path></svg>
-                                                        </a>
-                                                        <a href="#" class="inline-flex justify-center p-1 text-gray-500 rounded cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
-                                                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
-                                                        </a>
-                                                        <a href="#" class="inline-flex justify-center p-1 text-gray-500 rounded cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
-                                                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
-                                                        </a>
-                                                        <a href="#" class="inline-flex justify-center p-1 text-gray-500 rounded cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
-                                                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path></svg>
-                                                        </a>
-                                                    </div>
-                                                </div>-->
-                    </div>
-                    <button id="createProductButton"
-                            class="text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
-                            type="button" data-drawer-target="drawer-create-product-default"
-                            data-drawer-show="drawer-create-product-default"
-                            aria-controls="drawer-create-product-default" data-drawer-placement="right">
-                        Agregar {{ model }}
-                    </button>
+                    class="items-center justify-end block sm:flex md:divide-x md:divide-gray-100 dark:divide-gray-700">
+                    <SearchInput :model-path="model_path" v-model="query" @update:query="queryList"/>
+                    <Link :href="route(model_path+'.create')"
+                          :id="'create-'+model_path"
+                          class="text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800">
+                        Agregar {{ model_path }}
+                    </Link>
                 </div>
             </div>
         </div>
+        <div v-if="datas.isLoad">
+            <Loader/>
+        </div>
         <div v-if="datas.list.length === 0">
-            <Alert :message="'No se encontraron registros'" :path="model+'.create'"/>
+            <Alert v-if="query.length === 0" :message="'No se encontraron registros'" :path="model_path+'.create'"/>
+            <Alert-Info v-else :message="'No se encontraron registros con: '+query" />
         </div>
         <div v-else>
             <div class="flex flex-col">
@@ -257,6 +143,10 @@ const destroyData = async (id) => {
                                         class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">
                                         Actualizado
                                     </th>
+                                    <th scope="col"
+                                        class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">
+                                        Acciones
+                                    </th>
                                 </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
@@ -271,18 +161,14 @@ const destroyData = async (id) => {
                                         {{ item.detalle }}
                                     </td>
                                     <td class="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                        {{ item.created_at }}
+                                        {{ UtilsServices.fecha(item.created_at) }}
                                     </td>
                                     <td class="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                        {{ item.updated_at }}
+                                        {{ UtilsServices.fecha(item.updated_at) }}
                                     </td>
                                     <td class="p-4 space-x-2 whitespace-nowrap">
-                                        <button type="button" id="updateProductButton"
-                                                data-drawer-target="drawer-update-product-default"
-                                                data-drawer-show="drawer-update-product-default"
-                                                aria-controls="drawer-update-product-default"
-                                                data-drawer-placement="right"
-                                                class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
+                                        <Link :href="route(model_path+'.edit', item.id)"
+                                              class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
                                             <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"
                                                  xmlns="http://www.w3.org/2000/svg">
                                                 <path
@@ -291,13 +177,9 @@ const destroyData = async (id) => {
                                                       d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
                                                       clip-rule="evenodd"></path>
                                             </svg>
-                                            Update
-                                        </button>
-                                        <button type="button" id="deleteProductButton"
-                                                data-drawer-target="drawer-delete-product-default"
-                                                data-drawer-show="drawer-delete-product-default"
-                                                aria-controls="drawer-delete-product-default"
-                                                data-drawer-placement="right"
+                                            Editar
+                                        </Link>
+                                        <button type="button" @click="destroyMessage(item.id)"
                                                 class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-red-700 rounded-lg hover:bg-red-800 focus:ring-4 focus:ring-red-300 dark:focus:ring-red-900">
                                             <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"
                                                  xmlns="http://www.w3.org/2000/svg">
@@ -305,7 +187,7 @@ const destroyData = async (id) => {
                                                       d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
                                                       clip-rule="evenodd"></path>
                                             </svg>
-                                            Delete item
+                                            Eliminar
                                         </button>
                                     </td>
                                 </tr>
@@ -316,6 +198,7 @@ const destroyData = async (id) => {
                 </div>
             </div>
             <div
+                v-show="datas.list.length > 10"
                 class="sticky bottom-0 right-0 items-center w-full p-4 bg-white border-t border-gray-200 sm:flex sm:justify-between dark:bg-gray-800 dark:border-gray-700">
                 <div class="flex items-center mb-4 sm:mb-0">
                     <a href="#"
@@ -347,11 +230,11 @@ const destroyData = async (id) => {
                                   d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
                                   clip-rule="evenodd"></path>
                         </svg>
-                        Previous
+                        Atras
                     </a>
                     <a href="#"
                        class="inline-flex items-center justify-center flex-1 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
-                        Next
+                        Siguiente
                         <svg class="w-5 h-5 ml-1 -mr-1" fill="currentColor" viewBox="0 0 20 20"
                              xmlns="http://www.w3.org/2000/svg">
                             <path fill-rule="evenodd"
@@ -362,183 +245,6 @@ const destroyData = async (id) => {
                 </div>
             </div>
         </div>
-
-        <!-- Edit Product Drawer -->
-        <div id="drawer-update-product-default"
-             class="fixed top-0 right-0 z-40 w-full h-screen max-w-xs p-4 overflow-y-auto transition-transform translate-x-full bg-white dark:bg-gray-800"
-             tabindex="-1" aria-labelledby="drawer-label" aria-hidden="true">
-            <h5 id="drawer-label"
-                class="inline-flex items-center mb-6 text-sm font-semibold text-gray-500 uppercase dark:text-gray-400">
-                Update Product</h5>
-            <button type="button" data-drawer-dismiss="drawer-update-product-default"
-                    aria-controls="drawer-update-product-default"
-                    class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 absolute top-2.5 right-2.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
-                <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"
-                     xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd"
-                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                          clip-rule="evenodd"></path>
-                </svg>
-                <span class="sr-only">Close menu</span>
-            </button>
-            <form action="#">
-                <div class="space-y-4">
-                    <div>
-                        <label for="name"
-                               class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Name</label>
-                        <input type="text" name="title" id="name"
-                               class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                               value="Education Dashboard" placeholder="Type product name" required="">
-                    </div>
-                    <div>
-                        <label for="category" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Technology</label>
-                        <select id="category"
-                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
-                            <option selected="">Flowbite</option>
-                            <option value="RE">React</option>
-                            <option value="AN">Angular</option>
-                            <option value="VU">Vue JS</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="price"
-                               class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Price</label>
-                        <input type="number" name="price" id="price"
-                               class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                               value="2999" placeholder="$149" required="">
-                    </div>
-                    <div>
-                        <label for="description" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Description</label>
-                        <textarea id="description" rows="4"
-                                  class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                                  placeholder="Enter event description here">Start developing with an open-source library of over 450+ UI components, sections, and pages built with the utility classes from Tailwind CSS and designed in Figma.</textarea>
-                    </div>
-                    <div>
-                        <label for="discount" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Discount</label>
-                        <select id="discount"
-                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
-                            <option selected="">No</option>
-                            <option value="5">5%</option>
-                            <option value="10">10%</option>
-                            <option value="20">20%</option>
-                            <option value="30">30%</option>
-                            <option value="40">40%</option>
-                            <option value="50">50%</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="bottom-0 left-0 flex justify-center w-full pb-4 mt-4 space-x-4 sm:absolute sm:px-4 sm:mt-0">
-                    <button type="submit"
-                            class="w-full justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
-                        Update
-                    </button>
-                    <button type="button"
-                            class="w-full justify-center text-red-600 inline-flex items-center hover:text-white border border-red-600 hover:bg-red-600 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
-                        <svg aria-hidden="true" class="w-5 h-5 mr-1 -ml-1" fill="currentColor" viewBox="0 0 20 20"
-                             xmlns="http://www.w3.org/2000/svg">
-                            <path fill-rule="evenodd"
-                                  d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                                  clip-rule="evenodd"></path>
-                        </svg>
-                        Delete
-                    </button>
-                </div>
-            </form>
-        </div>
-
-
-        <!-- Delete Product Drawer -->
-        <div id="drawer-delete-product-default"
-             class="fixed top-0 right-0 z-40 w-full h-screen max-w-xs p-4 overflow-y-auto transition-transform translate-x-full bg-white dark:bg-gray-800"
-             tabindex="-1" aria-labelledby="drawer-label" aria-hidden="true">
-            <h5 id="drawer-label"
-                class="inline-flex items-center text-sm font-semibold text-gray-500 uppercase dark:text-gray-400">Delete
-                item</h5>
-            <button type="button" data-drawer-dismiss="drawer-delete-product-default"
-                    aria-controls="drawer-delete-product-default"
-                    class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 absolute top-2.5 right-2.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
-                <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"
-                     xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd"
-                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                          clip-rule="evenodd"></path>
-                </svg>
-                <span class="sr-only">Close menu</span>
-            </button>
-            <svg class="w-10 h-10 mt-8 mb-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                 xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <h3 class="mb-6 text-lg text-gray-500 dark:text-gray-400">Are you sure you want to delete this product?</h3>
-            <a href="#"
-               class="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm inline-flex items-center px-3 py-2.5 text-center mr-2 dark:focus:ring-red-900">
-                Yes, I'm sure
-            </a>
-            <a href="#"
-               class="text-gray-900 bg-white hover:bg-gray-100 focus:ring-4 focus:ring-primary-300 border border-gray-200 font-medium inline-flex items-center rounded-lg text-sm px-3 py-2.5 text-center dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-gray-700"
-               data-drawer-hide="drawer-delete-product-default">
-                No, cancel
-            </a>
-        </div>
-
-
-        <!-- Add Product Drawer -->
-        <div id="drawer-create-product-default"
-             class="fixed top-0 right-0 z-40 w-full h-screen max-w-xs p-4 overflow-y-auto transition-transform translate-x-full bg-white dark:bg-gray-800"
-             tabindex="-1" aria-labelledby="drawer-label" aria-hidden="true">
-            <h5 id="drawer-label"
-                class="inline-flex items-center mb-6 text-sm font-semibold text-gray-500 uppercase dark:text-gray-400">
-                Nuevo {{ model }}</h5>
-            <button type="button" data-drawer-dismiss="drawer-create-product-default"
-                    aria-controls="drawer-create-product-default"
-                    class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 absolute top-2.5 right-2.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
-                <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"
-                     xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd"
-                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                          clip-rule="evenodd"></path>
-                </svg>
-                <span class="sr-only">Cerrar menu</span>
-            </button>
-            <form @submit.prevent="submit_create">
-                <div class="space-y-4">
-                    <div>
-                        <label for="sigla"
-                               class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Sigla</label>
-                        <input type="text" name="sigla" id="sigla" v-model="form.sigla"
-                               class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                               placeholder="Sigla" required="">
-                        <InputError class="mt-2" :message="datas.siglaError.toUpperCase()" />
-                    </div>
-                    <div>
-                        <label for="detalle" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Detalle</label>
-                        <textarea id="detalle" rows="4" v-model="form.detalle"
-                                  class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                                  placeholder="Ingrese la descripción del evento aquí"></textarea>
-                        <InputError class="mt-2" :message="datas.detalleError.toUpperCase()" />
-                    </div>
-                    <div class="bottom-0 left-0 flex justify-center w-full pb-4 space-x-4 md:px-4 md:absolute">
-                        <button type="submit"
-                                class="text-white w-full justify-center bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
-                            Agregar
-                        </button>
-                        <button type="button" data-drawer-dismiss="drawer-create-product-default"
-                                aria-controls="drawer-create-product-default"
-                                class="inline-flex w-full justify-center text-gray-500 items-center bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-primary-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600">
-                            <svg aria-hidden="true" class="w-5 h-5 -ml-1 sm:mr-1" fill="none" stroke="currentColor"
-                                 viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                            Cancelar
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-
-
     </AppLayout>
 </template>
 

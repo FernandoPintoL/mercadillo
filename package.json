@@ -23,7 +23,7 @@
     "dependencies": {
         "jquery": "^3.7.1",
         "moment": "^2.30.1",
-        "sweetalert2": "^11.16.1",
+        "sweetalert2": "^11.17.2",
         "vue-sweetalert2": "^5.0.11",
         "ziggy-js": "^2.5.1"
     }

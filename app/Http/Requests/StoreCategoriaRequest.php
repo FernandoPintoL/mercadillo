@@ -24,7 +24,9 @@ class StoreCategoriaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'sigla' => ['required', 'unique:categorias']
+            'sigla' => ['required', 'min:2', 'max:10','unique:categorias'],
+            // detalle no es requerido pero debe tener al menos 2 caracteres, pero tambien puede ser null
+            'detalle' => ['nullable', 'min:2', 'max:100']
         ];
     }
 

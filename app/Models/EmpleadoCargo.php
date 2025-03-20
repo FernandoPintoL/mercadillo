@@ -9,4 +9,12 @@ class EmpleadoCargo extends Model
 {
     /** @use HasFactory<\Database\Factories\EmpleadoCargoFactory> */
     use HasFactory;
+    protected $table = "empleado_cargos";
+    protected $primaryKey = "id";
+    protected $fillable = [
+        'sigla',
+        'detalle',
+        'created_at',
+        'updated_at'
+    ];
 }
