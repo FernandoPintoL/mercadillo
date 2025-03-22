@@ -5,13 +5,23 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreAlmacenRequest;
 use App\Http\Requests\UpdateAlmacenRequest;
 use App\Models\Almacen;
-use App\Models\Unidad;
+use App\Services\PermissionService;
+use App\Services\ResponseService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
 class AlmacenController extends Controller
 {
+    public function __construct()
+    {
+        /*$this->middleware('permission:almacen-list', ['only' => ['index', 'show']]);
+        $this->middleware('permission:almacen-create', ['only' => ['create', 'store']]);
+        $this->middleware('permission:almacen-edit', ['only' => ['edit', 'update']]);
+        $this->middleware('permission:almacen-delete', ['only' => ['destroy']]);*/
+    }
     public string $rutaVisita = 'Almacen';
+
     public function query(Request $request)
     {
         try {
@@ -22,40 +32,20 @@ class AlmacenController extends Controller
                 ->get();
             $cantidad = count($responsse);
             $str = strval($cantidad);
-            return response()->json([
-                "isRequest" => true,
-                "isSuccess" => true,
-                "isMessageError" => false,
-                "message" => "$str datos encontrados",
-                "messageError" => "",
-                "data" => $responsse,
-                "statusCode" => 200
-            ]);
+            return ResponseService::success("$str datos encontrados", $responsse);
         } catch (\Exception $e) {
-            $message = $e->getMessage();
-            $code = $e->getCode();
-            return response()->json([
-                "isRequest" => true,
-                "isSuccess" => false,
-                "isMessageError" => true,
-                "message" => $message,
-                "messageError" => "",
-                "data" => [],
-                "statusCode" => $code
-            ]);
+            return ResponseService::error($e->getMessage(), '', $e->getCode());
         }
     }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        return Inertia::render($this->rutaVisita.'/Index', [
+        return Inertia::render($this->rutaVisita . '/Index', array_merge([
             'listado' => Almacen::all(),
-            'crear' => true,
-            'editar' => true,
-            'eliminar' => true
-        ]);
+        ], PermissionService::getPermissions($this->rutaVisita)));
     }
 
     /**
@@ -63,13 +53,14 @@ class AlmacenController extends Controller
      */
     public function create()
     {
-        return Inertia::render($this->rutaVisita.'/CreateUpdate',
-            [
-                'isCreate' => true,
-                'crear' => true,
-                'editar' => true,
-                'eliminar' => true
-            ]);
+        // Verificar permiso manualmente
+        if (!Auth::user()->can('create Cliente')) {
+            abort(403);
+        }
+        return Inertia::render($this->rutaVisita . '/CreateUpdate', array_merge([
+            'isCreate' => true,
+            'listado' => Almacen::all(),
+        ], PermissionService::getPermissions($this->rutaVisita)));
     }
 
     /**
@@ -79,25 +70,9 @@ class AlmacenController extends Controller
     {
         try {
             $data = Almacen::create($request->all());
-            return response()->json([
-                'isRequest' => true,
-                'isSuccess' => true,
-                'isMessageError' => false,
-                'message' => 'Registro guardado correctamente',
-                'messageError' => '',
-                'data' => $data,
-                'statusCode' => 200
-            ], 200);
+            return ResponseService::success('Registro guardado correctamente', $data);
         } catch (\Exception $e) {
-            return response()->json([
-                'isRequest' => true,
-                'isSuccess' => false,
-                'isMessageError' => true,
-                'message' => 'Error al guardar el registro',
-                'messageError' => $e->getMessage(),
-                'data' => [],
-                'statusCode' => 500
-            ], 500);
+            return ResponseService::error('Error al guardar el registro', $e->getMessage());
         }
     }
 
@@ -114,12 +89,14 @@ class AlmacenController extends Controller
      */
     public function edit(Almacen $almacen)
     {
-        return Inertia::render($this->rutaVisita.'/CreateUpdate', [
+        // Verificar permiso manualmente
+        if (!Auth::user()->can('edit Cliente')) {
+            abort(403);
+        }
+        return Inertia::render($this->rutaVisita . '/CreateUpdate', array_merge([
             'isCreate' => false,
-            'crear' => true,
-            'editar' => true,
-            'eliminar' => true,
-            'model' => $almacen]);
+            'model' => $almacen,
+        ], PermissionService::getPermissions($this->rutaVisita)));
     }
 
     /**
@@ -129,25 +106,9 @@ class AlmacenController extends Controller
     {
         try {
             $almacen->update($request->all());
-            return response()->json([
-                'isRequest' => true,
-                'isSuccess' => true,
-                'isMessageError' => false,
-                'message' => 'Registro actualizado correctamente',
-                'messageError' => '',
-                'model' => $almacen,
-                'statusCode' => 200
-            ], 200);
+            return ResponseService::success('Registro actualizado correctamente', $almacen);
         } catch (\Exception $e) {
-            return response()->json([
-                'isRequest' => true,
-                'isSuccess' => false,
-                'isMessageError' => true,
-                'message' => 'Error al actualizar el registro',
-                'messageError' => $e->getMessage(),
-                'data' => [],
-                'statusCode' => 500
-            ], 500);
+            return ResponseService::error('Error al actualizar el registro', $e->getMessage());
         }
     }
 
@@ -158,25 +119,9 @@ class AlmacenController extends Controller
     {
         try {
             $almacen->delete();
-            return response()->json([
-                'isRequest' => true,
-                'isSuccess' => true,
-                'isMessageError' => false,
-                'message' => 'Registro eliminado correctamente',
-                'messageError' => '',
-                'data' => [],
-                'statusCode' => 200
-            ], 200);
+            return ResponseService::success('Registro eliminado correctamente');
         } catch (\Exception $e) {
-            return response()->json([
-                'isRequest' => true,
-                'isSuccess' => false,
-                'isMessageError' => true,
-                'message' => 'Error al eliminar el registro',
-                'messageError' => $e->getMessage(),
-                'data' => [],
-                'statusCode' => 500
-            ], 500);
+            return ResponseService::error('Error al eliminar el registro', $e->getMessage());
         }
     }
 }

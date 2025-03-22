@@ -138,11 +138,11 @@ const destroyData = async (id) => {
                                     </th>
                                     <th scope="col"
                                         class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">
-                                        Stock-Maximo
+                                        Stock-Minimo
                                     </th>
                                     <th scope="col"
                                         class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">
-                                        Stock-Minimo
+                                        Stock-Maximo
                                     </th>
                                     <th scope="col"
                                         class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">
@@ -170,15 +170,15 @@ const destroyData = async (id) => {
                                         {{ item.detalle }}
                                     </td>
                                     <td class="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                        {{ item.maximo }}
-                                    </td>
-                                    <td class="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                         {{ item.minimo }}
                                     </td>
                                     <td class="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                        {{ item.maximo }}
+                                    </td>
+                                    <td class="p-4 text-xs font-thin text-gray-900 whitespace-nowrap dark:text-white">
                                         {{ UtilsServices.fecha(item.created_at) }}
                                     </td>
-                                    <td class="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    <td class="p-4 text-xs font-thin text-gray-900 whitespace-nowrap dark:text-white">
                                         {{ UtilsServices.fecha(item.updated_at) }}
                                     </td>
                                     <td v-if="props.editar || props.eliminar" class="p-4 space-x-2 whitespace-nowrap">

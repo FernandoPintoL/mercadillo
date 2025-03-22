@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreCategoriaRequest;
 use App\Http\Requests\UpdateCategoriaRequest;
 use App\Models\Categoria;
+use App\Services\PermissionService;
+use App\Services\ResponseService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -21,27 +23,9 @@ class CategoriaController extends Controller
                 ->get();
             $cantidad = count($responsse);
             $str = strval($cantidad);
-            return response()->json([
-                "isRequest" => true,
-                "isSuccess" => true,
-                "isMessageError" => false,
-                "message" => "$str datos encontrados",
-                "messageError" => "",
-                "data" => $responsse,
-                "statusCode" => 200
-            ]);
+            return ResponseService::success("$str datos encontrados", $responsse);
         } catch (\Exception $e) {
-            $message = $e->getMessage();
-            $code = $e->getCode();
-            return response()->json([
-                "isRequest" => true,
-                "isSuccess" => false,
-                "isMessageError" => true,
-                "message" => $message,
-                "messageError" => "",
-                "data" => [],
-                "statusCode" => $code
-            ]);
+            return ResponseService::error($e->getMessage(), '', $e->getCode());
         }
     }
 
@@ -50,12 +34,9 @@ class CategoriaController extends Controller
      */
     public function index()
     {
-        return Inertia::render($this->rutaVisita.'/Index', [
+        return Inertia::render($this->rutaVisita . '/Index', array_merge([
             'listado' => Categoria::all(),
-            'crear' => true,
-            'editar' => true,
-            'eliminar' => true
-        ]);
+        ], PermissionService::getPermissions($this->rutaVisita)));
     }
 
     /**
@@ -79,25 +60,9 @@ class CategoriaController extends Controller
     {
         try {
             $data = Categoria::create($request->all());
-            return response()->json([
-                'isRequest' => true,
-                'isSuccess' => true,
-                'isMessageError' => false,
-                'message' => 'Registro guardado correctamente',
-                'messageError' => '',
-                'data' => $data,
-                'statusCode' => 200
-            ], 200);
+            return ResponseService::success('Registro guardado correctamente', $data);
         } catch (\Exception $e) {
-            return response()->json([
-                'isRequest' => true,
-                'isSuccess' => false,
-                'isMessageError' => true,
-                'message' => 'Error al guardar el registro',
-                'messageError' => $e->getMessage(),
-                'data' => [],
-                'statusCode' => 500
-            ], 500);
+            return ResponseService::error('Error al guardar el registro', $e->getMessage());
         }
     }
 
@@ -129,25 +94,9 @@ class CategoriaController extends Controller
     {
         try {
             $categorium->update($request->all());
-            return response()->json([
-                'isRequest' => true,
-                'isSuccess' => true,
-                'isMessageError' => false,
-                'message' => 'Registro actualizado correctamente',
-                'messageError' => '',
-                'model' => $categorium,
-                'statusCode' => 200
-            ], 200);
+            return ResponseService::success('Registro actualizado correctamente', $categorium);
         } catch (\Exception $e) {
-            return response()->json([
-                'isRequest' => true,
-                'isSuccess' => false,
-                'isMessageError' => true,
-                'message' => 'Error al actualizar el registro',
-                'messageError' => $e->getMessage(),
-                'data' => [],
-                'statusCode' => 500
-            ], 500);
+            return ResponseService::error('Error al actualizar el registro', $e->getMessage());
         }
     }
 
@@ -158,25 +107,9 @@ class CategoriaController extends Controller
     {
         try {
             $categorium->delete();
-            return response()->json([
-                'isRequest' => true,
-                'isSuccess' => true,
-                'isMessageError' => false,
-                'message' => 'Registro eliminado correctamente',
-                'messageError' => '',
-                'data' => [],
-                'statusCode' => 200
-            ], 200);
+            return ResponseService::success('Registro eliminado correctamente');
         } catch (\Exception $e) {
-            return response()->json([
-                'isRequest' => true,
-                'isSuccess' => false,
-                'isMessageError' => true,
-                'message' => 'Error al eliminar el registro',
-                'messageError' => $e->getMessage(),
-                'data' => [],
-                'statusCode' => 500
-            ], 500);
+            return ResponseService::error('Error al eliminar el registro', $e->getMessage());
         }
     }
 }

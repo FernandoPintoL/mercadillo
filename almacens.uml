@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>DATABASE</ID>
+  <OriginalElement>7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.almacens</OriginalElement>
+  <nodes>
+    <node x="82.193287435456" y="706.0447504302927">7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.clientes</node>
+    <node x="-354.1857142857143" y="622.4537005163511">7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.sessions</node>
+    <node x="-652.3734939759036" y="-35.362478485370076">7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.password_reset_tokens</node>
+    <node x="-460.0611015490533" y="139.36247848537005">7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.cache</node>
+    <node x="349.54457831325306" y="706.0447504302927">7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.empleados</node>
+    <node x="187.0" y="274.4537005163512">7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.tipo_documentos</node>
+    <node x="-652.3734939759036" y="108.0">7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.cache_locks</node>
+    <node x="1315.6707401032704" y="-149.08364888123924">7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.unidads</node>
+    <node x="-401.5036144578313" y="-131.36247848537008">7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.jobs</node>
+    <node x="425.74165232357996" y="-95.70808950086052">7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.sectors</node>
+    <node x="-652.3734939759036" y="251.36247848537005">7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.failed_jobs</node>
+    <node x="-652.3734939759036" y="-176.0">7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.migrations</node>
+    <node x="817.1523235800344" y="167.25111876075744">7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.inventarios</node>
+    <node x="-658.3734939759036" y="809.6041308089501">7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.job_batches</node>
+    <node x="1138.6559380378658" y="72.0">7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.items</node>
+    <node x="-178.5" y="227.24543889845097">7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.users</node>
+    <node x="-658.3734939759036" y="490.7249569707401">7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.personal_access_tokens</node>
+    <node x="397.37349397590356" y="463.8086058519794">7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.empleado_cargos</node>
+    <node x="652.6635111876076" y="-119.3624784853701">7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.almacens</node>
+    <node x="584.2600688468157" y="718.0447504302927">7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.proveedors</node>
+    <node x="999.0222030981065" y="-149.08364888123924">7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.categorias</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.items" target="7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.categorias" relationship="REFERENCES">
+      <point x="-87.0" y="-116.0" />
+      <point x="52.63373493975928" y="80.0" />
+    </edge>
+    <edge source="7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.empleados" target="7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.empleado_cargos" relationship="REFERENCES">
+      <point x="47.3289156626505" y="-152.0" />
+      <point x="0.0" y="80.0" />
+    </edge>
+    <edge source="7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.empleados" target="7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.users" relationship="REFERENCES">
+      <point x="4.2168674696085873E-4" y="-151.9997504302927" />
+      <point x="444.545" y="665.0" />
+      <point x="-42.0" y="665.0" />
+      <point x="0.0" y="175.99956110154903" />
+    </edge>
+    <edge source="7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.clientes" target="7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.tipo_documentos" relationship="REFERENCES">
+      <point x="14.999712564544012" y="-139.9997504302927" />
+      <point x="191.693" y="684.0" />
+      <point x="281.5" y="684.0" />
+      <point x="0.0" y="80.0002994836488" />
+    </edge>
+    <edge source="7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.sessions" target="7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.users" relationship="REFERENCES">
+      <point x="87.4997142857143" y="2.994836488596775E-4" />
+      <point x="-57.0" y="714.454" />
+      <point x="-57.0" y="665.0" />
+      <point x="-42.0" y="665.0" />
+      <point x="0.0" y="175.99956110154903" />
+    </edge>
+    <edge source="7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.inventarios" target="7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.almacens" relationship="REFERENCES">
+      <point x="-87.0" y="-91.5" />
+      <point x="77.48881239242678" y="92.0" />
+    </edge>
+    <edge source="7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.items" target="7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.unidads" relationship="REFERENCES">
+      <point x="87.0" y="-116.0" />
+      <point x="-90.01480206540464" y="80.0" />
+    </edge>
+    <edge source="7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.clientes" target="7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.users" relationship="REFERENCES">
+      <point x="-2.8743545598786113E-4" y="-139.9997504302927" />
+      <point x="176.693" y="665.0" />
+      <point x="-42.0" y="665.0" />
+      <point x="0.0" y="175.99956110154903" />
+    </edge>
+    <edge source="7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.proveedors" target="7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.tipo_documentos" relationship="REFERENCES">
+      <point x="-6.884681567953521E-5" y="-139.9997504302927" />
+      <point x="678.76" y="684.0" />
+      <point x="281.5" y="684.0" />
+      <point x="0.0" y="80.0002994836488" />
+    </edge>
+    <edge source="7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.empleados" target="7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.tipo_documentos" relationship="REFERENCES">
+      <point x="-16.544578313253055" y="-151.9997504302927" />
+      <point x="428.0" y="684.0" />
+      <point x="281.5" y="684.0" />
+      <point x="0.0" y="80.0002994836488" />
+    </edge>
+    <edge source="7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.inventarios" target="7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.items" relationship="REFERENCES">
+      <point x="94.5" y="-70.75111876075744" />
+      <point x="-94.5" y="0.0" />
+    </edge>
+    <edge source="7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.inventarios" target="7f72550b-ed1e-4eba-9434-2e2141aefb8c.TABLE:mercadillo.public.sectors" relationship="REFERENCES">
+      <point x="-94.5" y="-1.7974182444062308" />
+      <point x="520.24165232358" y="256.9537005163512" />
+      <point x="0.0" y="104.0" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic Compact" zoom="0.4440124416796267" showDependencies="false" x="433.0" y="467.00000000000017" />
+  <SelectedNodes />
+  <Categories>
+    <Category>Columns</Category>
+    <Category>Comments</Category>
+    <Category>Key columns</Category>
+    <Category>Virtual foreign keys</Category>
+  </Categories>
+</Diagram>
+

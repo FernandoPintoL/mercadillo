@@ -37,8 +37,8 @@ const form = useForm({
     id: props.model != null ? props.model.id : '',
     sigla: props.model != null ? props.model.sigla : '',
     detalle: props.model != null ? props.model.detalle : '',
-    maximo: props.model != null ? props.model.maximo : '',
-    minimo: props.model != null ? props.model.minimo : '',
+    minimo: props.model != null ? props.model.minimo : 1,
+    maximo: props.model != null ? props.model.maximo : 1000,
 })
 
 onMounted(() => {
@@ -61,12 +61,12 @@ const datas = reactive({
     isLoad: false,
     siglaError: '',
     detalleError: '',
-    maximoError:'',
-    minimoError:'',
+    maximoError: '',
+    minimoError: '',
 })
 
 const validateSigla = (e) => {
-    if(e.target.value.length === 0) {
+    if (e.target.value.length === 0) {
         return;
     }
     if (!validacion.validarSigla(e.target.value)) {
@@ -78,7 +78,7 @@ const validateSigla = (e) => {
 };
 
 const validateDetalle = (e) => {
-    if(e.target.value.length === 0) {
+    if (e.target.value.length === 0) {
         return;
     }
     if (!validacion.validarDetalle(e.target.value)) {
@@ -90,7 +90,7 @@ const validateDetalle = (e) => {
 };
 
 const validateMaximo = (e) => {
-    if(e.target.value.length === 0) {
+    if (e.target.value.length === 0) {
         return;
     }
     if (!validacion.validarNumero(e.target.value)) {
@@ -102,7 +102,7 @@ const validateMaximo = (e) => {
 };
 
 const validateMinimo = (e) => {
-    if(e.target.value.length === 0) {
+    if (e.target.value.length === 0) {
         return;
     }
     if (!validacion.validarNumero(e.target.value)) {
@@ -146,13 +146,13 @@ const editar = async () => {
 }
 
 const submit_create = async () => {
-    if(form.sigla.length < 2) {
+    if (form.sigla.length < 2) {
         datas.siglaError = 'La sigla debe tener más de 2 caracteres y no contener caracteres especiales.';
         return;
     }
-    if(props.isCreate){
+    if (props.isCreate) {
         await create();
-    }else{
+    } else {
         await editar();
     }
 
@@ -176,8 +176,12 @@ const handleErrors = (error) => {
         <div class="mx-auto px-4 py-6">
             <HeaderForm :model_path="model_path"
                         :isCreate="props.isCreate"
-                        :id_model="props.model ? props.model.id.toString() : ''"/>
+                        :id_model="props.model ? props.model.id.toString() : ''"
+                        :fecha_creado="props.model ? props.model.created_at : ''"
+                        :fecha_actualizado="props.model ? props.model.updated_at : ''"
+            />
             <div>
+                <!--                Sigla-->
                 <div class="mb-4">
                     <label :for="'sigla-'+model_path"
                            :class="{'label-error': datas.siglaError}"
@@ -192,31 +196,97 @@ const handleErrors = (error) => {
                            placeholder="Sigla" required="">
                     <InputError class="mt-2" :message="datas.siglaError.toUpperCase()"/>
                 </div>
-                <div class="mb-4">
-                    <label :for="'maximo-'+model_path"
-                           :class="{'label-error': datas.maximoError}"
-                           class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Stock Maximo</label>
-                    <input type="number"
-                           name="maximo"
-                           :id="'maximo-'+model_path"
-                           v-model="form.maximo"
-                           :class="{'input-error': datas.maximoError}"
-                           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                           placeholder="Maximo" required="">
-                    <InputError class="mt-2" :message="datas.maximoError.toUpperCase()"/>
-                </div>
-                <div class="mb-4">
-                    <label :for="'minimo-'+model_path"
-                           :class="{'label-error': datas.minimoError}"
-                           class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Stock Minimo</label>
-                    <input type="number"
-                           name="minimo"
-                           :id="'minimo-'+model_path"
-                           v-model="form.minimo"
-                           :class="{'input-error': datas.minimoError}"
-                           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                           placeholder="Minimo" required="">
-                    <InputError class="mt-2" :message="datas.minimoError.toUpperCase()"/>
+                <!--                MAXIMO Y MINIMO-->
+                <div class="flex justify-between items-center flex-col sm:flex-row space-y-1 sm:space-y-0">
+                    <div class="max-w-md mx-auto">
+                        <label for="quantity-input-minimo"
+                               :class="{'label-error': datas.minimoError}"
+                               class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                            Stock Minimo:
+                        </label>
+                        <div class="relative flex items-center">
+                            <button type="button"
+                                    id="decrement-button"
+                                    data-input-counter-decrement="quantity-input-minimo"
+                                    :class="{'input-error': datas.minimoError}"
+                                    class="bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-gray-200 border border-gray-300 rounded-s-lg p-3 h-11 focus:ring-gray-100 dark:focus:ring-gray-700 focus:ring-2 focus:outline-none">
+                                <svg class="w-3 h-3 text-gray-900 dark:text-white"
+                                     aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                     fill="none"
+                                     viewBox="0 0 18 2">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                          stroke-width="2" d="M1 1h16"/>
+                                </svg>
+                            </button>
+                            <input type="number"
+                                   id="quantity-input-minimo"
+                                   data-input-counter
+                                   aria-describedby="helper-text-explanation-minimo"
+                                   v-model="form.minimo"
+                                   @input="validateMinimo"
+                                   :class="{'input-error': datas.minimoError}"
+                                   class="bg-gray-50 border-x-0 border-gray-300 h-11 text-center text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                   placeholder="999" required/>
+                            <button type="button"
+                                    id="increment-button"
+                                    data-input-counter-increment="quantity-input-minimo"
+                                    :class="{'input-error': datas.minimoError}"
+                                    class="bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-gray-200 border border-gray-300 rounded-e-lg p-3 h-11 focus:ring-gray-100 dark:focus:ring-gray-700 focus:ring-2 focus:outline-none">
+                                <svg class="w-3 h-3 text-gray-900 dark:text-white"
+                                     aria-hidden="true"
+                                     xmlns="http://www.w3.org/2000/svg"
+                                     fill="none"
+                                     viewBox="0 0 18 18">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                          stroke-width="2" d="M9 1v16M1 9h16"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <p id="helper-text-explanation-minimo"
+                           class="mt-2 text-sm text-gray-500 dark:text-gray-400"></p>
+                        <InputError class="mt-2" :message="datas.minimoError.toUpperCase()"/>
+                    </div>
+                    <div class="max-w-md mx-auto">
+                        <label for="quantity-input-maximo"
+                               :class="{'label-error': datas.maximoError}"
+                               class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Stock
+                            Maximo:</label>
+                        <div class="relative flex items-center">
+                            <button type="button" id="decrement-button"
+                                    data-input-counter-decrement="quantity-input-maximo"
+                                    :class="{'input-error': datas.maximoError}"
+                                    class="bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-gray-200 border border-gray-300 rounded-s-lg p-3 h-11 focus:ring-gray-100 dark:focus:ring-gray-700 focus:ring-2 focus:outline-none">
+                                <svg class="w-3 h-3 text-gray-900 dark:text-white" aria-hidden="true"
+                                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 2">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                          stroke-width="2" d="M1 1h16"/>
+                                </svg>
+                            </button>
+                            <input type="number"
+                                   id="quantity-input-maximo"
+                                   v-model="form.maximo"
+                                   @input="validateMaximo"
+                                   data-input-counter aria-describedby="helper-text-explanation-maximo"
+                                   :class="{'input-error': datas.maximoError}"
+                                   class="bg-gray-50 border-x-0 border-gray-300 h-11 text-center text-gray-900 text-sm focus:ring-blue-500 focus:border-blue-500 block w-full py-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                   placeholder="999"
+                                   required/>
+                            <button type="button" id="increment-button"
+                                    data-input-counter-increment="quantity-input-maximo"
+                                    :class="{'input-error': datas.maximoError}"
+                                    class="bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-gray-200 border border-gray-300 rounded-e-lg p-3 h-11 focus:ring-gray-100 dark:focus:ring-gray-700 focus:ring-2 focus:outline-none">
+                                <svg class="w-3 h-3 text-gray-900 dark:text-white" aria-hidden="true"
+                                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 18">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                          stroke-width="2" d="M9 1v16M1 9h16"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <p id="helper-text-explanation-maximo"
+                           class="mt-2 text-sm text-gray-500 dark:text-gray-400"></p>
+                        <InputError class="mt-2" :message="datas.maximoError.toUpperCase()"/>
+                    </div>
+
                 </div>
                 <div class="mb-4">
                     <label :for="'detalle-'+model_path"
@@ -225,7 +295,7 @@ const handleErrors = (error) => {
                     <textarea :id="'detalle-'+model_path"
                               rows="4"
                               v-model="form.detalle"
-                                @input="validateDetalle"
+                              @input="validateDetalle"
                               :class="{'input-error': datas.detalleError}"
                               class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                               placeholder="Ingrese la descripción aquí"></textarea>

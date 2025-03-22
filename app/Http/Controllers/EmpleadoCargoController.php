@@ -4,16 +4,41 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreEmpleadoCargoRequest;
 use App\Http\Requests\UpdateEmpleadoCargoRequest;
+use App\Models\Almacen;
+use App\Models\Empleado;
 use App\Models\EmpleadoCargo;
+use App\Services\ResponseService;
+use Inertia\Inertia;
 
 class EmpleadoCargoController extends Controller
 {
+    public string $rutaVisita = 'Empleado';
+    public function query(Request $request)
+    {
+        try {
+            $queryStr = $request->get('query');
+            $responsse = Empleado::where('sigla', 'LIKE', '%' . $queryStr . '%')
+                ->orWhere('detalle', 'LIKE', '%' . $queryStr . '%')
+                ->orderBy('id', 'ASC')
+                ->get();
+            $cantidad = count($responsse);
+            $str = strval($cantidad);
+            return ResponseService::success("$str datos encontrados", $responsse);
+        } catch (\Exception $e) {
+            return ResponseService::error($e->getMessage(), '', $e->getCode());
+        }
+    }
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        //
+        return Inertia::render($this->rutaVisita . '/Index', [
+            'listado' => Almacen::all(),
+            'crear' => true,
+            'editar' => true,
+            'eliminar' => true
+        ]);
     }
 
     /**
